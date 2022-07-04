@@ -28,5 +28,15 @@ namespace ConfuserExUnTypeScramble
         {
             Program.unscrambledTimes++;
         }
+
+        public static bool isContainsGenericParameters(MethodDef method)
+        {
+            if (!UnTypeScrambler.scrambledMethods.ContainsKey(method)) throw new Exception("scrambledMethods does not contains method: " + method.FullName + " [" + method.MDToken + "]!");
+            foreach (TypeSig typeSig in UnTypeScrambler.scrambledMethods[method])
+            {
+                if (typeSig.IsGenericParameter) return true;
+            }
+            return false;
+        }
     }
 }

@@ -51,7 +51,7 @@ namespace ConfuserExUnTypeScramble
                 }
                 while (unscrambledTimes > 0);
                 Console.WriteLine("Untypescrambled successfully!");
-                Console.WriteLine("Excluded methods: ");
+                if (UnTypeScrambler.excludedMethods.Count > 0) Console.WriteLine("Excluded methods: ");
                 foreach (MethodDef method in UnTypeScrambler.excludedMethods)
                 {
                     Console.WriteLine(method.FullName + " [" + method.MDToken + "]");
@@ -63,6 +63,8 @@ namespace ConfuserExUnTypeScramble
                 Console.WriteLine("Fixing Activator.CreateInstance...");
                 UnTypeScrambler.FixActivatorCreateInstance(module.Types);
                 SaveModule(arg);
+                UnTypeScrambler.excludedMethods.Clear();
+                UnTypeScrambler.scrambledMethods.Clear();
             }
             pause();
         }

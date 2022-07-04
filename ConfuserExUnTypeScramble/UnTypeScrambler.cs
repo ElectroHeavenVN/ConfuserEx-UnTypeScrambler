@@ -51,7 +51,7 @@ namespace ConfuserExUnTypeScramble
                 if (type.HasNestedTypes) RemoveGenericParameters(type.NestedTypes);
                 foreach (MethodDef method in type.Methods)
                 {
-                    if (method.HasGenericParameters && !excludedMethods.Contains(method))
+                    if (method.HasGenericParameters && !excludedMethods.Contains(method) && scrambledMethods.ContainsKey(method) && !Utils.isContainsGenericParameters(method))
                     {
                         method.GenericParameters.Clear();
                         MethodSig signature = (MethodSig)method.Signature;
