@@ -7,7 +7,7 @@
     <ProjectGuid>{A976DE78-E708-4D60-BAE5-EEA38532B722}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>ConfuserExUnTypeScrambler</RootNamespace>
-    <AssemblyName>ConfuserExUnTypeScramble</AssemblyName>
+    <AssemblyName>ConfuserExUnTypeScrambler</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -22,7 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\ConfuserExUnTypeScramble.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\ConfuserExUnTypeScrambler.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -33,7 +33,7 @@
     </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\ConfuserExUnTypeScramble.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\ConfuserExUnTypeScrambler.xml</DocumentationFile>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
   <ItemGroup>
