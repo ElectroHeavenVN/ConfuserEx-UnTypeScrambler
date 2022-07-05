@@ -1,28 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
-using System.Runtime.InteropServices;
-using dnlib.DotNet;
+﻿using dnlib.DotNet;
 using dnlib.DotNet.Emit;
-using dnlib.DotNet.Writer;
+using System;
+using System.Collections.Generic;
 
-namespace ConfuserExUnTypeScramble
+namespace ConfuserExUnTypeScrambler
 {
+    /// <summary>
+    /// Contains algorithm for fixing ConfuserEx type scramble.
+    /// </summary>
     public class UnTypeScrambler
     {
+        /// <summary>
+        /// Collection of type scrambled methods.
+        /// </summary>
         public static Dictionary<MethodDef, IList<TypeSig>> scrambledMethods = new Dictionary<MethodDef, IList<TypeSig>>();
 
+        /// <summary>
+        /// Collection of excluded methods.
+        /// </summary>
         public static List<MethodDef> excludedMethods = new List<MethodDef>();
 
-
-        public static void FixTypeScrambleCall(IList<TypeDef> types)
+        /// <summary>
+        /// Fix calls to type scrambled methods.
+        /// </summary>
+        /// <param name="types">
+        /// The collection of <see cref="TypeDef"/>.
+        /// </param>
+        public static void FixTypeScrambleCalls(IList<TypeDef> types)
         {
             foreach (TypeDef type in types)
             {
-                if (type.HasNestedTypes) FixTypeScrambleCall(type.NestedTypes);
+                if (type.HasNestedTypes) FixTypeScrambleCalls(type.NestedTypes);
                 foreach (MethodDef method in type.Methods)
                 {
                     if (!method.HasBody) continue;
@@ -43,7 +51,12 @@ namespace ConfuserExUnTypeScramble
                 }
             }
         }
-
+        /// <summary>
+        /// Remove method generic parameters if possible.
+        /// </summary>
+        /// <param name="types">
+        /// The collection of <see cref="TypeDef"/>.
+        /// </param>
         public static void RemoveGenericParameters(IList<TypeDef> types)
         {
             foreach (TypeDef type in types)
@@ -51,17 +64,27 @@ namespace ConfuserExUnTypeScramble
                 if (type.HasNestedTypes) RemoveGenericParameters(type.NestedTypes);
                 foreach (MethodDef method in type.Methods)
                 {
-                    if (method.HasGenericParameters && !excludedMethods.Contains(method) && scrambledMethods.ContainsKey(method) && !Utils.isContainsGenericParameters(method))
+                    if (method.HasGenericParameters && !excludedMethods.Contains(method) && scrambledMethods.ContainsKey(method))
                     {
-                        method.GenericParameters.Clear();
-                        MethodSig signature = (MethodSig)method.Signature;
-                        signature.GenParamCount = 0;
-                        signature.Generic = false;
+                        if (!Utils.isFoundGenericParameters(method))
+                        {
+                            method.GenericParameters.Clear();
+                            MethodSig signature = (MethodSig)method.Signature;
+                            signature.GenParamCount = 0;
+                            signature.Generic = false;
+                        }
+                        else Console.WriteLine("Unable to remove generic parameters of method: " + method.FullName + " [" + method.MDToken + "] !");
                     }
                 }
             }
         }
 
+        /// <summary>
+        /// Main algorithm.
+        /// </summary>
+        /// <param name="types">
+        /// The collection of <see cref="TypeDef"/>.
+        /// </param>
         public static void UnTypeScramble(IList<TypeDef> types)
         {
             foreach (TypeDef type in types)
@@ -107,7 +130,7 @@ namespace ConfuserExUnTypeScramble
                                     if ((typeSpec.FullName == method.GenericParameters[j].FullName) && !scrambledMethods[method][j].IsGenericParameter)
                                     {
                                         instruction.Operand = scrambledMethods[method][j].ToTypeDefOrRef();
-                                        Utils.IncreaseUnscrambleTime();
+                                        Program.unscrambledTimes++;
                                     }
                                 }
                             }
@@ -123,7 +146,7 @@ namespace ConfuserExUnTypeScramble
                                             if (typeSigs[i].FullName == method.GenericParameters[j].FullName)
                                             {
                                                 methodSpec.GenericInstMethodSig.GenericArguments[i] = scrambledMethods[method][j];
-                                                Utils.IncreaseUnscrambleTime();
+                                                Program.unscrambledTimes++;
                                             }
                                             else if (typeSigs[i].IsGenericInstanceType)
                                             {
@@ -150,7 +173,7 @@ namespace ConfuserExUnTypeScramble
                     FnPtrSig fnPtr = (FnPtrSig)typeSig1;
                     FnPtrSig fnPtrSig = new FnPtrSig(fnPtr.Signature);
                     typeSig = typeSig1 = fnPtrSig;
-                    Utils.IncreaseUnscrambleTime();
+                    Program.unscrambledTimes++;
                 }
             }
             if (typeSig.Next != null && !typeSig1.IsGenericParameter)
@@ -208,12 +231,12 @@ namespace ConfuserExUnTypeScramble
                     }
                 }
                 else typeSig = typeSig1;
-                Utils.IncreaseUnscrambleTime();
+                Program.unscrambledTimes++;
             }
             return typeSig;
         }
 
-        public static void UnTypeScrambleGenericInstType(MethodDef method, int j, TypeSig typeSig)
+        private static void UnTypeScrambleGenericInstType(MethodDef method, int j, TypeSig typeSig)
         {
             if (scrambledMethods[method][j].IsGenericInstanceType)
             {
@@ -222,7 +245,7 @@ namespace ConfuserExUnTypeScramble
                     if (typeSig.ToGenericInstSig().GenericArguments[k].FullName == method.GenericParameters[j].FullName)
                     {
                         typeSig.ToGenericInstSig().GenericArguments[k] = scrambledMethods[method][j].ToGenericInstSig().GenericArguments[k];
-                        Utils.IncreaseUnscrambleTime();
+                        Program.unscrambledTimes++;
                     }
                     else if (typeSig.ToGenericInstSig().GenericArguments[k].IsGenericInstanceType)
                     {
@@ -237,7 +260,7 @@ namespace ConfuserExUnTypeScramble
                     if (typeSig.ToGenericInstSig().GenericArguments[k].FullName == method.GenericParameters[j].FullName)
                     {
                         typeSig.ToGenericInstSig().GenericArguments[k] = scrambledMethods[method][j];
-                        Utils.IncreaseUnscrambleTime();
+                        Program.unscrambledTimes++;
                     }
                     else if (typeSig.ToGenericInstSig().GenericArguments[k].IsGenericInstanceType)
                     {
@@ -247,6 +270,12 @@ namespace ConfuserExUnTypeScramble
             }
         }
 
+        /// <summary>
+        /// Get all scrambled methods in <paramref name="types" />.
+        /// </summary>
+        /// <param name="types"> 
+        /// The collection of <see cref="TypeDef"/>.
+        /// </param>
         public static void GetScrambledMethods(IList<TypeDef> types)
         {
             foreach (TypeDef type in types)
@@ -293,6 +322,12 @@ namespace ConfuserExUnTypeScramble
                 }
             }
         }
+        /// <summary>
+        /// Fix <see cref="Activator.CreateInstance(Type)"/> by adding an explicit cast.
+        /// </summary>
+        /// <param name="types">
+        /// The collection of <see cref="TypeDef"/>.
+        /// </param>
         public static void FixActivatorCreateInstance(IList<TypeDef> types)
         {
             foreach (TypeDef type in types)
