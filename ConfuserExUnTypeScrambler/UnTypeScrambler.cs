@@ -73,7 +73,7 @@ namespace ConfuserExUnTypeScrambler
                             signature.GenParamCount = 0;
                             signature.Generic = false;
                         }
-                        else Console.WriteLine("Unable to remove generic parameters of method: " + method.FullName + " [" + method.MDToken + "] !");
+                        else Console.WriteLine("Unable to remove generic parameters of method: " + method.FullName + " [" + method.MDToken + "]!");
                     }
                 }
             }
