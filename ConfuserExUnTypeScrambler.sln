@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32611.2
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfuserExUnTypeScramble", "ConfuserExUnTypeScramble\ConfuserExUnTypeScramble.csproj", "{A976DE78-E708-4D60-BAE5-EEA38532B722}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfuserExUnTypeScrambler", "ConfuserExUnTypeScramble\ConfuserExUnTypeScrambler.csproj", "{A976DE78-E708-4D60-BAE5-EEA38532B722}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

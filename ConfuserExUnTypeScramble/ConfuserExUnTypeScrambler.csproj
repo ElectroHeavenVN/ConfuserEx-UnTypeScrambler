@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{A976DE78-E708-4D60-BAE5-EEA38532B722}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>ConfuserExUnTypeScramble</RootNamespace>
+    <RootNamespace>ConfuserExUnTypeScrambler</RootNamespace>
     <AssemblyName>ConfuserExUnTypeScramble</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

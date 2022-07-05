@@ -25,18 +25,19 @@ internal class Program
     /// </summary>
     static void Main(string[] args)
     {
+        PrintLogo();
+        Console.WriteLine("                                     v" + Assembly.GetExecutingAssembly().GetName().Version);
+        Console.WriteLine("                             Created by ElectroHeavenVN");
+        Console.ResetColor();
         if (args.Length == 0)
         {
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("Argument empty!");
             pause();
             return;
         }
         foreach (string arg in args)
         {
-            PrintLogo();
-            Console.WriteLine("                                     v" + Assembly.GetExecutingAssembly().GetName().Version);
-            Console.WriteLine("                             Created by ElectroHeavenVN");
-            Console.ResetColor();
             Console.WriteLine("Untypescrambling assembly: " + Path.GetFileName(arg) + "...");
             module = AssemblyDef.Load(arg).ManifestModule;
             UnTypeScrambler.GetScrambledMethods(module.Types);
