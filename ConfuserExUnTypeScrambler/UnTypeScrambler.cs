@@ -36,7 +36,7 @@ namespace ConfuserExUnTypeScrambler
                     if (!method.HasBody) continue;
                     foreach (Instruction instruction in method.Body.Instructions)
                     {
-                        if (instruction.OpCode.OperandType == OperandType.InlineMethod && instruction.Operand is MethodSpec methodSpec)
+                        if ((instruction.OpCode.OperandType == OperandType.InlineMethod || instruction.OpCode.OperandType == OperandType.InlineTok) && instruction.Operand is MethodSpec methodSpec)
                         {
                             MethodDef methodDef = methodSpec.ResolveMethodDef();
                             if (methodDef == null) continue;
@@ -123,7 +123,7 @@ namespace ConfuserExUnTypeScrambler
                         }
                         foreach (Instruction instruction in method.Body.Instructions)
                         {
-                            if (instruction.OpCode.OperandType == OperandType.InlineType && instruction.Operand is TypeSpec typeSpec)
+                            if ((instruction.OpCode.OperandType == OperandType.InlineType || instruction.OpCode.OperandType == OperandType.InlineTok) && instruction.Operand is TypeSpec typeSpec)
                             {
                                 for (int j = 0; j < method.GenericParameters.Count; j++)
                                 {
@@ -134,7 +134,7 @@ namespace ConfuserExUnTypeScrambler
                                     }
                                 }
                             }
-                            if (instruction.OpCode.OperandType == OperandType.InlineMethod && instruction.Operand is MethodSpec methodSpec)
+                            if ((instruction.OpCode.OperandType == OperandType.InlineMethod || instruction.OpCode.OperandType == OperandType.InlineTok) && instruction.Operand is MethodSpec methodSpec)
                             {
                                 IList<TypeSig> typeSigs = methodSpec.GenericInstMethodSig.GenericArguments;
                                 for (int i = 0; i < typeSigs.Count; i++)
@@ -286,7 +286,7 @@ namespace ConfuserExUnTypeScrambler
                     if (!method.HasBody) continue;
                     foreach (Instruction instruction in method.Body.Instructions)
                     {
-                        if (instruction.OpCode.OperandType == OperandType.InlineMethod)
+                        if (instruction.OpCode.OperandType == OperandType.InlineMethod || instruction.OpCode.OperandType == OperandType.InlineTok)
                         {
                             if (instruction.Operand is MethodSpec)
                             {
