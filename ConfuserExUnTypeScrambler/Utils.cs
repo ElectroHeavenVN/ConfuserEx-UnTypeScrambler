@@ -1,4 +1,5 @@
 ﻿using dnlib.DotNet;
+using dnlib.DotNet.Emit;
 using System;
 
 namespace ConfuserExUnTypeScrambler

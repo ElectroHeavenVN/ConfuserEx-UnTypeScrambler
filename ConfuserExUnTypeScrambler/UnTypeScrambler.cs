@@ -36,7 +36,7 @@ namespace ConfuserExUnTypeScrambler
                     if (!method.HasBody) continue;
                     foreach (Instruction instruction in method.Body.Instructions)
                     {
-                        if ((instruction.OpCode == OpCodes.Call || instruction.OpCode == OpCodes.Ldftn || instruction.OpCode == OpCodes.Callvirt) && instruction.Operand is MethodSpec methodSpec)
+                        if (instruction.OpCode.OperandType == OperandType.InlineMethod && instruction.Operand is MethodSpec methodSpec)
                         {
                             MethodDef methodDef = methodSpec.ResolveMethodDef();
                             if (methodDef == null) continue;
@@ -123,7 +123,7 @@ namespace ConfuserExUnTypeScrambler
                         }
                         foreach (Instruction instruction in method.Body.Instructions)
                         {
-                            if ((instruction.OpCode == OpCodes.Ldtoken || instruction.OpCode == OpCodes.Castclass || instruction.OpCode == OpCodes.Newarr || instruction.OpCode == OpCodes.Isinst) && instruction.Operand is TypeSpec typeSpec)
+                            if (instruction.OpCode.OperandType == OperandType.InlineType && instruction.Operand is TypeSpec typeSpec)
                             {
                                 for (int j = 0; j < method.GenericParameters.Count; j++)
                                 {
@@ -134,7 +134,7 @@ namespace ConfuserExUnTypeScrambler
                                     }
                                 }
                             }
-                            if ((instruction.OpCode == OpCodes.Call || instruction.OpCode == OpCodes.Ldftn || instruction.OpCode == OpCodes.Callvirt) && instruction.Operand is MethodSpec methodSpec)
+                            if (instruction.OpCode.OperandType == OperandType.InlineMethod && instruction.Operand is MethodSpec methodSpec)
                             {
                                 IList<TypeSig> typeSigs = methodSpec.GenericInstMethodSig.GenericArguments;
                                 for (int i = 0; i < typeSigs.Count; i++)
@@ -286,33 +286,35 @@ namespace ConfuserExUnTypeScrambler
                     if (!method.HasBody) continue;
                     foreach (Instruction instruction in method.Body.Instructions)
                     {
-                        if (instruction.OpCode == OpCodes.Call || instruction.OpCode == OpCodes.Ldftn || instruction.OpCode == OpCodes.Callvirt)
+                        if (instruction.OpCode.OperandType == OperandType.InlineMethod)
                         {
-                            if (!(instruction.Operand is MethodSpec)) continue;
-                            MethodSpec methodSpec = (MethodSpec)instruction.Operand;
-                            MethodDef methodDef = methodSpec.Method.ResolveMethodDef();
-                            if (methodDef == null) continue;
-                            if (methodSpec.Method.IsMethod && methodDef.HasGenericParameters)
+                            if (instruction.Operand is MethodSpec)
                             {
-                                GenericInstMethodSig genericInstMethodSig = (GenericInstMethodSig)methodSpec.Instantiation;
-                                try
+                                MethodSpec methodSpec = (MethodSpec)instruction.Operand;
+                                MethodDef methodDef = methodSpec.Method.ResolveMethodDef();
+                                if (methodDef == null) continue;
+                                if (methodSpec.Method.IsMethod && methodDef.HasGenericParameters)
                                 {
-                                    if (!excludedMethods.Contains(methodDef))
+                                    GenericInstMethodSig genericInstMethodSig = (GenericInstMethodSig)methodSpec.Instantiation;
+                                    try
                                     {
-                                        scrambledMethods.Add(methodDef, genericInstMethodSig.GenericArguments);
-                                    }
-                                }
-                                catch (Exception)
-                                {
-                                    for (int i = 0; i < genericInstMethodSig.GenericArguments.Count; i++)
-                                    {
-                                        if (scrambledMethods[methodDef][i].IsGenericParameter && !genericInstMethodSig.GenericArguments[i].IsGenericParameter)
+                                        if (!excludedMethods.Contains(methodDef))
                                         {
-                                            scrambledMethods[methodDef][i] = genericInstMethodSig.GenericArguments[i];
+                                            scrambledMethods.Add(methodDef, genericInstMethodSig.GenericArguments);
                                         }
-                                        if (!scrambledMethods[methodDef][i].IsGenericParameter && !genericInstMethodSig.GenericArguments[i].IsGenericParameter && scrambledMethods[methodDef][i].FullName != genericInstMethodSig.GenericArguments[i].FullName)
+                                    }
+                                    catch (Exception)
+                                    {
+                                        for (int i = 0; i < genericInstMethodSig.GenericArguments.Count; i++)
                                         {
-                                            if (!excludedMethods.Contains(methodDef)) excludedMethods.Add(methodDef);
+                                            if (scrambledMethods[methodDef][i].IsGenericParameter && !genericInstMethodSig.GenericArguments[i].IsGenericParameter)
+                                            {
+                                                scrambledMethods[methodDef][i] = genericInstMethodSig.GenericArguments[i];
+                                            }
+                                            if (!scrambledMethods[methodDef][i].IsGenericParameter && !genericInstMethodSig.GenericArguments[i].IsGenericParameter && scrambledMethods[methodDef][i].FullName != genericInstMethodSig.GenericArguments[i].FullName)
+                                            {
+                                                if (!excludedMethods.Contains(methodDef)) excludedMethods.Add(methodDef);
+                                            }
                                         }
                                     }
                                 }
