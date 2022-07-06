@@ -344,12 +344,24 @@ namespace ConfuserExUnTypeScrambler
                         {
                             //MemberRef memberRef = (MemberRef)method.Body.Instructions[i].Operand;
                             //if (memberRef.FullName.Contains("System.Activator::CreateInstance(")) method.Body.Instructions.Insert(i + 1, new Instruction(OpCodes.Castclass, method.Body.Instructions[i - 2].Operand));
-                            TypeRef typeRef = (TypeRef)method.Body.Instructions[i - 2].Operand;
-                            MethodDef methodDef = typeRef.ResolveThrow().FindDefaultConstructor();
-                            MemberRefUser memberRefUser1 = new MemberRefUser(methodDef.Module, methodDef.Name, methodDef.MethodSig, typeRef);
-                            method.Body.Instructions.RemoveAt(i);
-                            method.Body.Instructions.RemoveAt(i - 1);
-                            method.Body.Instructions[i - 2] = new Instruction(OpCodes.Newobj, memberRefUser1);
+                            if (method.Body.Instructions[i - 2].Operand is TypeRef)
+                            {
+                                TypeRef typeRef = (TypeRef)method.Body.Instructions[i - 2].Operand;
+                                MethodDef methodDef = typeRef.ResolveThrow().FindDefaultConstructor();
+                                MemberRefUser memberRefUser1 = new MemberRefUser(methodDef.Module, methodDef.Name, methodDef.MethodSig, typeRef);
+                                method.Body.Instructions.RemoveAt(i);
+                                method.Body.Instructions.RemoveAt(i - 1);
+                                method.Body.Instructions[i - 2] = new Instruction(OpCodes.Newobj, memberRefUser1);
+                            }
+                            else if (method.Body.Instructions[i - 2].Operand is TypeSpec)
+                            {
+                                TypeSpec typeSpec = (TypeSpec)method.Body.Instructions[i - 2].Operand;
+                                MethodDef methodDef = typeSpec.ResolveTypeDefThrow().FindDefaultConstructor();
+                                MemberRefUser memberRefUser = new MemberRefUser(Program.module, methodDef.Name, methodDef.MethodSig, typeSpec);
+                                method.Body.Instructions.RemoveAt(i);
+                                method.Body.Instructions.RemoveAt(i - 1);
+                                method.Body.Instructions[i - 2] = new Instruction(OpCodes.Newobj, memberRefUser);
+                            }
                         }
                     }
                     method.Body.OptimizeBranches();

@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 
 internal class Program
 {
@@ -25,6 +26,7 @@ internal class Program
     /// </summary>
     static void Main(string[] args)
     {
+        Console.OutputEncoding = Encoding.UTF8;
         PrintLogo();
         Console.WriteLine("                                     v" + Assembly.GetExecutingAssembly().GetName().Version);
         Console.WriteLine("                             Created by ElectroHeavenVN");
@@ -52,6 +54,7 @@ internal class Program
             }
             Console.WriteLine("Scanning scrambled methods...");
             UnTypeScrambler.GetScrambledMethods(module.Types);
+            Console.WriteLine("Found " + UnTypeScrambler.scrambledMethods.Count + " scrambled methods!");
             Console.WriteLine("Untypescrambling...");
             do
             {
