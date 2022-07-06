@@ -42,10 +42,8 @@ namespace ConfuserExUnTypeScrambler
                             if (methodDef == null) continue;
                             if (scrambledMethods.ContainsKey(methodDef) && !excludedMethods.Contains(methodDef))
                             {
-                                methodSpec.GenericInstMethodSig.GenericArguments.Clear();
-                                methodSpec.GenericInstMethodSig.Generic = false;
+                                instruction.Operand = methodDef;
                             }
-
                         }
                     }
                 }
