@@ -39,8 +39,20 @@ internal class Program
         foreach (string arg in args)
         {
             Console.WriteLine("Untypescrambling assembly: " + Path.GetFileName(arg) + "...");
+            Console.WriteLine("Resolving dependencies...");
             module = AssemblyDef.Load(arg).ManifestModule;
+            ModuleContext moduleContext = ModuleDef.CreateModuleContext();
+            AssemblyResolver assemblyResolver = (AssemblyResolver)moduleContext.AssemblyResolver;
+            assemblyResolver.EnableTypeDefCache = true;
+            module.Context = moduleContext;
+            ((AssemblyResolver)module.Context.AssemblyResolver).AddToCache(module);
+            foreach (AssemblyRef assemblyRef in module.GetAssemblyRefs())
+            {
+                assemblyResolver.ResolveThrow(assemblyRef, module);
+            }
+            Console.WriteLine("Scanning scrambled methods...");
             UnTypeScrambler.GetScrambledMethods(module.Types);
+            Console.WriteLine("Untypescrambling...");
             do
             {
                 unscrambledTimes = 0;
@@ -50,12 +62,12 @@ internal class Program
                 UnTypeScrambler.GetScrambledMethods(module.Types);
             }
             while (unscrambledTimes > 0);
-            Console.WriteLine("Untypescrambled successfully!");
             if (UnTypeScrambler.excludedMethods.Count > 0) Console.WriteLine("Excluded methods: ");
             foreach (MethodDef method in UnTypeScrambler.excludedMethods)
             {
                 Console.WriteLine(method.FullName + " [" + method.MDToken + "]");
             }
+            Console.WriteLine("Untypescrambled successfully!");
             Console.WriteLine("Removing generic parameters...");
             UnTypeScrambler.RemoveGenericParameters(module.Types);
             Console.WriteLine("Fixing calls to typescrambled methods...");

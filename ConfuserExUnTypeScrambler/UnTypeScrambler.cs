@@ -323,7 +323,7 @@ namespace ConfuserExUnTypeScrambler
             }
         }
         /// <summary>
-        /// Fix <see cref="Activator.CreateInstance(Type)"/> by adding an explicit cast.
+        /// Fix <see cref="Activator.CreateInstance(Type)"/>.
         /// </summary>
         /// <param name="types">
         /// The collection of <see cref="TypeDef"/>.
@@ -342,8 +342,14 @@ namespace ConfuserExUnTypeScrambler
                     {
                         if (method.Body.Instructions[i].OpCode == OpCodes.Call && method.Body.Instructions[i - 1].OpCode == OpCodes.Call && method.Body.Instructions[i - 2].OpCode == OpCodes.Ldtoken)
                         {
-                            MemberRef memberRef = (MemberRef)method.Body.Instructions[i].Operand;
-                            if (memberRef.FullName.Contains("System.Activator::CreateInstance(")) method.Body.Instructions.Insert(i + 1, new Instruction(OpCodes.Castclass, method.Body.Instructions[i - 2].Operand));
+                            //MemberRef memberRef = (MemberRef)method.Body.Instructions[i].Operand;
+                            //if (memberRef.FullName.Contains("System.Activator::CreateInstance(")) method.Body.Instructions.Insert(i + 1, new Instruction(OpCodes.Castclass, method.Body.Instructions[i - 2].Operand));
+                            TypeRef typeRef = (TypeRef)method.Body.Instructions[i - 2].Operand;
+                            MethodDef methodDef = typeRef.ResolveThrow().FindDefaultConstructor();
+                            MemberRefUser memberRefUser1 = new MemberRefUser(methodDef.Module, methodDef.Name, methodDef.MethodSig, typeRef);
+                            method.Body.Instructions.RemoveAt(i);
+                            method.Body.Instructions.RemoveAt(i - 1);
+                            method.Body.Instructions[i - 2] = new Instruction(OpCodes.Newobj, memberRefUser1);
                         }
                     }
                     method.Body.OptimizeBranches();
