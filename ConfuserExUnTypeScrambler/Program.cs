@@ -50,7 +50,15 @@ internal class Program
             ((AssemblyResolver)module.Context.AssemblyResolver).AddToCache(module);
             foreach (AssemblyRef assemblyRef in module.GetAssemblyRefs())
             {
-                assemblyResolver.ResolveThrow(assemblyRef, module);
+                try
+                {
+                    assemblyResolver.ResolveThrow(assemblyRef, module);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error while resolving dependencies: ");
+                    Utils.LogException(ex);
+                }
             }
             Console.WriteLine("Scanning scrambled methods...");
             UnTypeScrambler.GetScrambledMethods(module.Types);
@@ -68,7 +76,7 @@ internal class Program
             if (UnTypeScrambler.excludedMethods.Count > 0) Console.WriteLine("Excluded methods: ");
             foreach (MethodDef method in UnTypeScrambler.excludedMethods)
             {
-                Console.WriteLine(method.FullName + " [" + method.MDToken + "]");
+                Console.WriteLine(method.FullName + " [0x" + method.MDToken + "]");
             }
             Console.WriteLine("Untypescrambled successfully!");
             Console.WriteLine("Removing generic parameters...");
@@ -110,7 +118,8 @@ internal class Program
         }
         catch (ModuleWriterException ex)
         {
-            Console.WriteLine("Handled exception:" + ex);
+            Console.WriteLine("Handled exception:");
+            Utils.LogException(ex);
             moduleWriterOptions.MetadataOptions.Flags |= MetadataFlags.PreserveAll;
             moduleWriterOptions.MetadataLogger = DummyLogger.NoThrowInstance;
             module.Write(path, moduleWriterOptions);

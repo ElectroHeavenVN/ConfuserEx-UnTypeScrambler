@@ -38,12 +38,20 @@ namespace ConfuserExUnTypeScrambler
         /// </exception>
         public static bool isFoundGenericParameters(MethodDef method)
         {
-            if (!UnTypeScrambler.scrambledMethods.ContainsKey(method)) throw new Exception("scrambledMethods does not contains method: " + method.FullName + " [" + method.MDToken + "]!");
+            if (!UnTypeScrambler.scrambledMethods.ContainsKey(method)) throw new Exception("scrambledMethods does not contains method: " + method.FullName + " [0x" + method.MDToken + "]!");
             foreach (TypeSig typeSig in UnTypeScrambler.scrambledMethods[method])
             {
                 if (typeSig.IsGenericParameter) return true;
             }
             return false;
+        }
+
+        internal static void LogException(Exception ex)
+        {
+            ConsoleColor consoleColor = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(ex);
+            Console.ForegroundColor = consoleColor;
         }
     }
 }

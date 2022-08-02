@@ -71,7 +71,7 @@ namespace ConfuserExUnTypeScrambler
                             signature.GenParamCount = 0;
                             signature.Generic = false;
                         }
-                        else Console.WriteLine("Unable to remove generic parameters of method: " + method.FullName + " [" + method.MDToken + "]!");
+                        else Console.WriteLine("Unable to remove generic parameters of method: " + method.FullName + " [0x" + method.MDToken + "]!");
                     }
                 }
             }
@@ -290,7 +290,7 @@ namespace ConfuserExUnTypeScrambler
                             {
                                 MethodSpec methodSpec = (MethodSpec)instruction.Operand;
                                 MethodDef methodDef = methodSpec.Method.ResolveMethodDef();
-                                if (methodDef == null) continue;
+                                if (methodDef == null || methodDef.Module != Program.module) continue;
                                 if (methodSpec.Method.IsMethod && methodDef.HasGenericParameters)
                                 {
                                     GenericInstMethodSig genericInstMethodSig = (GenericInstMethodSig)methodSpec.Instantiation;
@@ -335,7 +335,12 @@ namespace ConfuserExUnTypeScrambler
                 if (type.HasNestedTypes) FixActivatorCreateInstance(type.NestedTypes);
                 foreach (MethodDef method in type.Methods)
                 {
-                    if (!method.HasBody || excludedMethods.Contains(method)) continue;
+                    if (!method.HasBody || excludedMethods.Contains(method)) continue;     
+                    if (!scrambledMethods.ContainsKey(method))
+                    {
+                        if (method.GenericParameters.Count > 0) Console.WriteLine($"Method {method.FullName} [0x{method.MDToken}] not found in scrambled methods list!");
+                        continue;
+                    }
                     method.Body.SimplifyBranches();
                     method.Body.SimplifyMacros(method.Parameters);
                     for (int i = method.Body.Instructions.Count - 1; i >= 2; i--)
@@ -346,21 +351,45 @@ namespace ConfuserExUnTypeScrambler
                             //if (memberRef.FullName.Contains("System.Activator::CreateInstance(")) method.Body.Instructions.Insert(i + 1, new Instruction(OpCodes.Castclass, method.Body.Instructions[i - 2].Operand));
                             if (method.Body.Instructions[i - 2].Operand is TypeRef)
                             {
-                                TypeRef typeRef = (TypeRef)method.Body.Instructions[i - 2].Operand;
-                                MethodDef methodDef = typeRef.ResolveThrow().FindDefaultConstructor();
-                                MemberRefUser memberRefUser1 = new MemberRefUser(methodDef.Module, methodDef.Name, methodDef.MethodSig, typeRef);
-                                method.Body.Instructions.RemoveAt(i);
-                                method.Body.Instructions.RemoveAt(i - 1);
-                                method.Body.Instructions[i - 2] = new Instruction(OpCodes.Newobj, memberRefUser1);
+                                try
+                                {
+                                    TypeRef typeRef = (TypeRef)method.Body.Instructions[i - 2].Operand;
+                                    MethodDef methodDef = typeRef.ResolveThrow().FindDefaultConstructor();
+                                    MemberRefUser memberRefUser1 = new MemberRefUser(methodDef.Module, methodDef.Name, methodDef.MethodSig, typeRef);
+                                    method.Body.Instructions.RemoveAt(i);
+                                    method.Body.Instructions.RemoveAt(i - 1);
+                                    //method.Body.Instructions[i - 2] = new Instruction(OpCodes.Newobj, memberRefUser1);
+                                    method.Body.Instructions[i - 2].OpCode = OpCodes.Newobj;
+                                    method.Body.Instructions[i - 2].Operand = memberRefUser1;
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"Some error occurred while fixing Activator.CreateInstance in method {method.FullName} [0x{method.MDToken}]! Switch to fallback mode!");
+                                    Utils.LogException(ex);
+                                    MemberRef memberRef = (MemberRef)method.Body.Instructions[i].Operand;
+                                    if (memberRef.FullName.Contains("System.Activator::CreateInstance(")) method.Body.Instructions.Insert(i + 1, new Instruction(OpCodes.Castclass, method.Body.Instructions[i - 2].Operand));
+                                }
                             }
                             else if (method.Body.Instructions[i - 2].Operand is TypeSpec)
                             {
-                                TypeSpec typeSpec = (TypeSpec)method.Body.Instructions[i - 2].Operand;
-                                MethodDef methodDef = typeSpec.ResolveTypeDefThrow().FindDefaultConstructor();
-                                MemberRefUser memberRefUser = new MemberRefUser(Program.module, methodDef.Name, methodDef.MethodSig, typeSpec);
-                                method.Body.Instructions.RemoveAt(i);
-                                method.Body.Instructions.RemoveAt(i - 1);
-                                method.Body.Instructions[i - 2] = new Instruction(OpCodes.Newobj, memberRefUser);
+                                try
+                                {
+                                    TypeSpec typeSpec = (TypeSpec)method.Body.Instructions[i - 2].Operand;
+                                    MethodDef methodDef = typeSpec.ResolveTypeDefThrow().FindDefaultConstructor();
+                                    MemberRefUser memberRefUser = new MemberRefUser(Program.module, methodDef.Name, methodDef.MethodSig, typeSpec);
+                                    method.Body.Instructions.RemoveAt(i);
+                                    method.Body.Instructions.RemoveAt(i - 1);
+                                    //method.Body.Instructions[i - 2] = new Instruction(OpCodes.Newobj, memberRefUser);
+                                    method.Body.Instructions[i - 2].OpCode = OpCodes.Newobj;
+                                    method.Body.Instructions[i - 2].Operand = memberRefUser;
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"Some error occurred while fixing Activator.CreateInstance in method {method.FullName} [0x{method.MDToken}]! Switch to fallback mode!");
+                                    Utils.LogException(ex);
+                                    MemberRef memberRef = (MemberRef)method.Body.Instructions[i].Operand;
+                                    if (memberRef.FullName.Contains("System.Activator::CreateInstance(")) method.Body.Instructions.Insert(i + 1, new Instruction(OpCodes.Castclass, method.Body.Instructions[i - 2].Operand));
+                                }
                             }
                         }
                     }
